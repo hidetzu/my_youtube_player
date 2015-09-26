@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<title> My YouTube Player</title>
+	<link rel="stylesheet" href="styles/default.css" type="text/css" />
+</head>
+<body>
+<div id="watch-headline-title">
+<h1  class="watch-title-container" >
+</div>
+</h1>
+<div id="player"></div>
+<hr>
+<form id="search" onsubmit="return false;">
+<input type="TEXT" id="q">
+<input type="SUBMIT" id="search" value="Search!">
+</form>
+<hr>
+<input type="BUTTON" id="prev" value="<< Prev">
+<input type="BUTTON" id="play" value="Play">
+<input type="BUTTON" id="pause" value="Pause">
+<input type="BUTTON" id="next" value="Next >>">
+<hr>
+<ul id="list">
+</ul>
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="scripts/myscript.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
