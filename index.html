@@ -1,31 +1,50 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" ng-app="myYoutubePlayer">
 <head>
 	<meta charset="utf-8">
 	<title> My YouTube Player</title>
 	<link rel="stylesheet" href="styles/default.css" type="text/css" />
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.6/angular.min.js"></script>
+	<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script src="scripts/myscript.js"></script>
+	<script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
+<div ng-controller="AppCtrl as appCtrl">
+
 <div id="watch-headline-title">
-<h1  class="watch-title-container" >
+	<h1  class="watch-title-container">{{watch_video['title']}}</h1>
 </div>
-</h1>
+
 <div id="player"></div>
 <hr>
-<form id="search" onsubmit="return false;">
-<input type="TEXT" id="q">
-<input type="SUBMIT" id="search" value="Search!">
+
+<form novalidate id="search" onsubmit="return false;" name="serachForm" ng-submit="appCtrl.search()">
+	<input type="text" id="q" ng-model="appCtrl.query" required>
+	<input type="submit" id="search" value="Search" ng-disabled="serachForm.$invalid">
 </form>
+
+
 <hr>
-<input type="BUTTON" id="prev" value="<< Prev">
-<input type="BUTTON" id="play" value="Play">
-<input type="BUTTON" id="pause" value="Pause">
-<input type="BUTTON" id="next" value="Next >>">
+<input type="button" id="prev"  ng-click="appCtrl.onPrev()" value="<< Prev">
+<input type="button" id="play"  ng-click="appCtrl.onPlay()" value="Play">
+<input type="button" id="pause" ng-click="appCtrl.onPause()" value="Pause">
+<input type="button" id="next"  ng-click="appCtrl.onNext()" value="Next >>">
 <hr>
-<ul id="list">
+
+<ul id="list" ng-show="results.length">
+	<li class="movie"
+		ng-class="{ 'moviePlaying': result.playing && result.selected, 'movieOn': !result.playing && result.selected, 'movieOff': !result.selected}"
+		ng-repeat="result in results"
+		ng-click="appCtrl.select(result)">
+		<img 
+			ng-src="{{result['data']['snippet']['thumbnails']['default']['url']}}"/>
+	</li>
 </ul>
-<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="scripts/myscript.js"></script>
-<script src="https://www.youtube.com/iframe_api"></script>
+<p ng-hide="results.length"> ↑から検索して下さい</p>
+</div>
+
+
+
 </body>
 </html>

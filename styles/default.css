@@ -15,9 +15,11 @@ li.movie {
 	width: 120px;
 	padding: 10px;
 }
-li.movie.on {
+
+li.movieOn {
 	background-color:#afa;
 }
-li.movie.playing {
+
+li.moviePlaying {
 	background-color:#faa;
 }

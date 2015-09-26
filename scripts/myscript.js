@@ -1,90 +1,6 @@
 
 var player;
 
-$(function() {
-	$('#q').focus();
-
-	$('#search').submit(function() {
-
-		// キーワードからYouTubeを検索
-		var url = "https://www.googleapis.com/youtube/v3/search";
-		var options = {
-			part:"snippet",
-			key:"AIzaSyA1GEzfaziufzEcB6oyTSHL5qd9mdtK7sA",
-			q: $('#q').val(),
-		};
-
-		// 検索結果を#listへ追加
-		$.get(url, options, function(rs) {
-			console.log(rs);
-			$('#list').empty();
-			for( var item of rs.items ) {
-				$('#list').append(
-						$('<li class="movie">').append(
-								$('<img>').attr('src',item['snippet']['thumbnails']['default']['url'])
-							).attr({
-							'video-id'   : item['id']['videoId'],
-							'video-title': item['snippet']['title'],
-						})
-				)
-			}
-		}, "json");
-
-
-
-	});
-	$(document).on('click', 'li.movie', function() {
-		$(this).toggleClass('on');
-	});
-
-	var currentIndex = 0;
-
-	function play() {
-		// currentindexのVideoIdを取得
-		var currentItem = $('li.movie.on:eq('+currentIndex+')');
-		var videoId = currentItem.attr('video-id');
-		var title   = currentItem.attr('video-title');
-
-
-		// それを再生
-		$('h1.watch-title-container').text(title);
-		player.loadVideoById(videoId);
-
-		// .playing
-		$('li.movie').removeClass('playing');
-		$('li.movie.on:eq('+currentIndex+')').addClass('playing');
-	}
-
-	$('#play').click(function() {
-		play();
-	});
-
-
-	$('#pause').click(function() {
-		player.pauseVideo();
-	});
-
-	$('#next').click(function() {
-		if( currentIndex == $('li.movie.on').length - 1 ) {
-			currentIndex = 0;
-		} else {
-			currentIndex++;
-		}
-		play();
-	});
-
-	$('#prev').click(function() {
-		if( currentIndex == 0 ) {
-			return false;
-		}
-		currentIndex--;
-		play();
-	});
-
-});
-	
-
-
 function onYouTubeIframeAPIReady() {
 	player = new YT.Player('player', {
 		height: '390',
@@ -100,3 +16,113 @@ function onPlayerStateChange(e) {
 		$('#next').trigger('click');
 	}
 }
+
+angular.module('myYoutubePlayer',[])
+.controller('AppCtrl',  ['$scope', '$http', function ($scope, $http) {
+
+	var appCtrl     = this;
+
+
+	$scope.watch_video = {
+		'id'        : -1,
+		'title'     : "",
+		'videoId'   : "",
+	};
+	$scope.results = [];
+
+	appCtrl.search = function() {
+		var url = "https://www.googleapis.com/youtube/v3/search?"
+			+  [
+				'part=snippet',
+				'key=AIzaSyA1GEzfaziufzEcB6oyTSHL5qd9mdtK7sA',
+				'q=' + encodeURIComponent(this.query),
+				'callback=JSON_CALLBACK',
+			].join('&');
+
+		$http.jsonp(url).success(function(data) {
+			$scope.results.length = 0;
+			$scope.results = [];
+
+			for(var item of data.items) {
+				$scope.results.push( {
+					playing  : false,
+					selected : false,
+					data:item });
+			};
+
+		});
+
+	};
+
+
+	appCtrl.play = function(startIdx) {
+		if( (0 <= $scope.watch_video.id ) && ($scope.watch_video.id <= $scope.results.length - 1)) {
+			$scope.results[$scope.watch_video.id].playing = false;
+		}
+
+		for(var i = startIdx; i < $scope.results.length; i++) {
+			var v = $scope.results[i];
+			if( v.selected ==  true ) {
+				$scope.watch_video.id      = i;
+				$scope.watch_video.title   = v['data']['snippet']['title'];
+				$scope.watch_video.videoId = v['data']['id']['videoId'];
+				$scope.results[$scope.watch_video.id].playing = true;
+				break;
+			}
+			
+		}
+
+		player.loadVideoById($scope.watch_video.videoId);
+	};
+
+	appCtrl.getSelectedList = function() {
+		var tmpList = [];
+		for(var i = 0; i < $scope.results.length; i++) {
+			var v = $scope.results[i];
+			if( v.selected ==  true ) {
+				tmpList.push(i);
+			}
+			
+		}
+		return tmpList;
+	}
+
+
+	appCtrl.onPrev = function() {
+		var tmpList =  this.getSelectedList();
+		var currentIdx = $scope.watch_video.id;
+		if( currentIdx == tmpList[0] ) {
+			return false;
+		}
+
+		currentIdx--;
+		this.play(currentIdx);
+	};
+
+	appCtrl.onPlay = function() {
+		this.play(0);
+	};
+
+	appCtrl.onPause = function() {
+		player.pauseVideo();
+	};
+
+	appCtrl.onNext = function() {
+		var tmpList =  this.getSelectedList();
+		var currentIdx = $scope.watch_video.id;
+		if( currentIdx >= tmpList[tmpList.length-1] ) {
+			currentIdx =  tmpList[0];
+		} else {
+			currentIdx++;
+		}
+
+		this.play(currentIdx);
+	};
+
+	appCtrl.select = function(selectedItem) {
+		selectedItem.selected = !selectedItem.selected
+		return selectedItem.selected;
+	};
+}]);
+
+
